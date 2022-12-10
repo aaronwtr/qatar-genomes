@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 def bar_plot(data):
     label = "Entire qatari dataset"
     width = 1
-    diabetic_data = data['diabetic']
-    non_diabetic_data = data['non-diabetic']
+    diabetic_data = list(data.values()).count('diabetic')
+    non_diabetic_data = list(data.values()).count('non-diabetic')
 
     canvas_size_x = 10
     canvas_size_y = 10
