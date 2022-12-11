@@ -51,8 +51,6 @@ def count_gene_hets_homs(gene_data, diabetes_status):
     gene_data = gene_data.dropna(how='all')
     gene_data = gene_data.replace("Hom", "Hom_mut")
     gene_data = gene_data.fillna("Hom_wt")
-    print(gene_data)
-    # TODO 1: Inspect gene_data for similarity with excel sheet. We should find 6 hom_mut diabetics
     patient_alleles = {}
     for index, row in gene_data.iterrows():
         patient_id = row[os.getenv("PATIENT_ID")]
@@ -100,4 +98,4 @@ def fisher_exact_test(cont_table):
     if type(cont_table) == pd.DataFrame:
         cont_table = cont_table.to_numpy()
     _, pvalue = fisher_exact(cont_table)
-    return pvalue
+    return round(pvalue,3)
