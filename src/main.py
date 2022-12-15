@@ -10,9 +10,6 @@ import pickle as pkl
 def find_diabetic_patients():
     print("Loading data...")
     qatari_data = DataLoader(os.getenv("DATA")).get_qatari_data()
-    # save the data to a pickle file
-    with open('data/qatar_phenotype_data.pkl', 'wb') as f:
-        pkl.dump(qatari_data, f)
     print("Data loaded.")
     print("Parsing patient phenotypes...")
     patient_phenotypes = extract_patient_phenotypes(qatari_data)
