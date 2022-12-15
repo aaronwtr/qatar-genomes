@@ -1,5 +1,4 @@
-from utils import extract_patient_phenotypes, count_diabetic_patients, count_gene_hets_homs, make_cont_table, \
-    fisher_exact_test
+from utils import *
 from dataloader import DataLoader
 from plot import bar_plot
 from dotenv import load_dotenv
