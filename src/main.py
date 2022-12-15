@@ -19,7 +19,14 @@ def find_diabetic_patients():
     return qatari_data, diabetic_patients
 
 
-def het_hom_analysis(gene):
+def fisher_allele_analysis(gene):
+    """
+    This function analyses the association between homozygous alleles and a particular phenotype, specifically diabetes.
+    It transforms our data into a 2x2 contingency table to calculate the p-values to quantify the association of an
+    allele with the phenotype.
+    :param gene: Gene name you want to test for phenotypic association.
+    :return: P-value for the allele and the phenotype association.
+    """
     qatari_data, diabetic_patients = find_diabetic_patients()
     gene_data = DataLoader(qatari_data).get_gene_data(gene)
     print("Counting alleles for different phenotypes...")
@@ -36,6 +43,23 @@ def het_hom_analysis(gene):
     print("p-value for heterozygote alleles: ", p_val_het)
 
 
+def logreg_allele_analysis(gene):
+    """
+    This function analyses the association between alleles and a particular phenotype by using a simple logistic
+    regression model.
+    :param gene: Gene name you want to test for phenotypic association
+    :return:
+    """
+    print("Getting feature data for logistic regression model...")
+    qatari_data, diabetic_patients = find_diabetic_patients()
+    gene_data = DataLoader(qatari_data).get_gene_data(gene)
+    hom_mut_features, het_features = get_logreg_features(gene_data)
+    hom_mut_model = smf.logit("diabetes ~ allele_hom_mut + age + gender_bin", hom_mut_features).fit()
+    het_model = smf.logit("diabetes ~ allele_het + age + gender_bin", het_features).fit()
+    print(f"Homologous mutant model: {hom_mut_model.summary()}")
+    print(f"Heterozygous model: {het_model.summary()}")
+
+
 if __name__ == "__main__":
     load_dotenv()
-    het_hom_analysis("TRPV1")
+    logreg_allele_analysis("TRPV1")

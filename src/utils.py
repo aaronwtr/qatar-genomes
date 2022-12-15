@@ -2,6 +2,7 @@ import os
 from tqdm import tqdm
 import pandas as pd
 from scipy.stats import fisher_exact
+import statsmodels.formula.api as smf
 import numpy as np
 
 
@@ -91,6 +92,20 @@ def make_cont_table(allele_counts):
     return cont_table_hom_mut, cont_table_het
 
 
+def get_logreg_features(gene_data):
+    gene_data = gene_data.dropna(how='all')
+    gene_data = gene_data.replace("Hom", "Hom_mut")
+    gene_data = gene_data.fillna("Hom_wt")
+    gene_data['diabetes'] = gene_data['ICD-10 phenotype'].apply(lambda x: 1 if 'diabetes' in x.lower() and 'type 1'
+                                                                               not in x.lower() else 0)
+    gene_data['gender_bin'] = gene_data['gender'].apply(lambda x: 1 if x == 'FEMALE' else 0)
+    gene_data['allele_hom_mut'] = gene_data[gene_data.columns[4]].apply(lambda x: 1 if x == 'Hom_mut' else 0)
+    gene_data['allele_het'] = gene_data[gene_data.columns[4]].apply(lambda x: 1 if x == 'Het' else 0)
+    features_hom_mut = gene_data[['gender_bin', 'age', 'allele_hom_mut', 'diabetes']]
+    features_het = gene_data[['gender_bin', 'age', 'allele_het', 'diabetes']]
+    return features_hom_mut, features_het
+
+
 def fisher_exact_test(cont_table):
     """
     This function takes in a contingency table and returns the p-value of the Fisher's exact test.
@@ -98,4 +113,4 @@ def fisher_exact_test(cont_table):
     if type(cont_table) == pd.DataFrame:
         cont_table = cont_table.to_numpy()
     _, pvalue = fisher_exact(cont_table)
-    return round(pvalue,3)
+    return round(pvalue, 3)
