@@ -60,6 +60,22 @@ def logreg_allele_analysis(gene):
     print(f"Heterozygous model: {het_model.summary()}")
 
 
+def phenotype_quantification():
+    print("Loading data...")
+    qatari_data = DataLoader(os.getenv("DATA")).get_qatari_data()
+    print("Data loaded.")
+    print("Parsing patient phenotypes...")
+    patient_phenotypes = extract_patient_phenotypes(qatari_data)
+    print("Patient phenotypes parsed.")
+    print("Tokenizing patient phenotypes...")
+    corpus = corpusify_phenotypes(patient_phenotypes)
+    tokenized_corpus = tokenize_corpus(corpus)
+    print("Patient phenotypes tokenized.")
+    print("Creating wordcloud...")
+    create_wordcloud(tokenized_corpus)
+
+
 if __name__ == "__main__":
     load_dotenv()
-    logreg_allele_analysis("TRPV1")
+    phenotype_quantification()
+    # logreg_allele_analysis("TRPV1")

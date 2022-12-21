@@ -3,7 +3,13 @@ from tqdm import tqdm
 import pandas as pd
 from scipy.stats import fisher_exact
 import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt
 import numpy as np
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.probability import FreqDist
+from wordcloud import WordCloud
 
 
 def extract_patient_phenotypes(df):
@@ -114,3 +120,44 @@ def fisher_exact_test(cont_table):
         cont_table = cont_table.to_numpy()
     _, pvalue = fisher_exact(cont_table)
     return round(pvalue, 3)
+
+
+def corpusify_phenotypes(phenotypes):
+    """
+    This function takes in a dictionary of phenotypes and returns a corpus of the phenotypes.
+    """
+    corpus = ''
+    phenotypes = list(phenotypes.values())
+    for phenotype in phenotypes:
+        corpus += phenotype[0] + ' '
+    return corpus
+
+
+def tokenize_corpus(corpus):
+    """
+    This function takes in a corpus and returns a list of tokens.
+    """
+    exclusion_list = ['low', 'check', 'foot', 'requested', 'current', 'persons', 'chronic', 'upper', 'examination',
+                      'unspecified', 'complication', 'delivery', 'laboratory', 'cohort', 'consultation', 'prescription'
+                      'classified', 'participate', 'single', 'test', 'explanation', 'investigation', 'suspected', 'use',
+                      'right', 'left', 'history', 'essential', 'person', 'activity', 'prescription', 'telephone',
+                      'without', 'specified', 'disease', 'screening', 'need']
+    stop_words = set(stopwords.words('english'))
+    filtered_words = [word.lower() for word in word_tokenize(corpus) if word.lower() not in stop_words
+                      and word.lower() not in exclusion_list]
+    filtered_words = [word for word in filtered_words if word.isalpha()]
+    return filtered_words
+
+
+def create_wordcloud(tokens):
+    """
+    This function creates a wordcloud of the phenotypes.
+    """
+    fdist = FreqDist(tokens)
+    wordcloud = WordCloud(width=800, height=800, background_color='white', min_font_size=10)\
+        .generate_from_frequencies(fdist)
+    plt.figure(figsize=(8, 8), facecolor=None)
+    plt.imshow(wordcloud)
+    plt.axis("off")
+    plt.tight_layout(pad=0)
+    plt.savefig('plots/wordcloud.png')
