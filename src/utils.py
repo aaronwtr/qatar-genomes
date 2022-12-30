@@ -137,11 +137,12 @@ def tokenize_corpus(corpus):
     """
     This function takes in a corpus and returns a list of tokens.
     """
-    exclusion_list = ['low', 'check', 'foot', 'requested', 'current', 'persons', 'chronic', 'upper', 'examination',
+    exclusion_list = ['low', 'check', 'foot', 'requested', 'current', 'persons', 'upper', 'examination',
                       'unspecified', 'complication', 'delivery', 'laboratory', 'cohort', 'consultation', 'prescription'
                       'classified', 'participate', 'single', 'test', 'explanation', 'investigation', 'suspected', 'use',
                       'right', 'left', 'history', 'essential', 'person', 'activity', 'prescription', 'telephone',
-                      'without', 'specified', 'disease', 'screening', 'need']
+                      'without', 'specified', 'disease', 'screening', 'need', 'type', 'diseases', 'syndrome', 'vitamin',
+                      'health', 'due', 'severe', 'results', 'findings', 'elsewhere', 'medical']
     stop_words = set(stopwords.words('english'))
     filtered_words = [word.lower() for word in word_tokenize(corpus) if word.lower() not in stop_words
                       and word.lower() not in exclusion_list]
@@ -161,3 +162,23 @@ def create_wordcloud(tokens):
     plt.axis("off")
     plt.tight_layout(pad=0)
     plt.savefig('plots/wordcloud.png')
+
+    return fdist
+
+
+def get_icd10_matches(qatari_data, top_phenotype_tokens, n=100):
+    qatari_phenotypes = extract_patient_phenotypes(qatari_data)
+    qatari_phenotypes = [phenotype[0].split(',') for phenotype in qatari_phenotypes.values()]
+    qatari_phenotypes = list(set([phenotype for sublist in qatari_phenotypes for phenotype in sublist]))
+    qatari_phenotypes = [phenotype for phenotype in qatari_phenotypes if phenotype != '']
+    top_phenotype_tokens = top_phenotype_tokens.most_common(n)
+    top_phenotype_tokens = dict(top_phenotype_tokens)
+    top_tokens_list = list(top_phenotype_tokens.keys())
+    top_icd10 = {}
+    for phenotype in qatari_phenotypes:
+        for token in top_tokens_list:
+            if token in phenotype:
+                phe_count = top_phenotype_tokens[token]
+                top_icd10[phenotype] = phe_count
+    top_icd10 = dict(sorted(top_icd10.items(), key=lambda item: item[1], reverse=True))
+    return top_icd10

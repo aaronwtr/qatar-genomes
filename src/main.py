@@ -72,10 +72,20 @@ def phenotype_quantification():
     tokenized_corpus = tokenize_corpus(corpus)
     print("Patient phenotypes tokenized.")
     print("Creating wordcloud...")
-    create_wordcloud(tokenized_corpus)
+    counted_corpus = create_wordcloud(tokenized_corpus)
+
+    return counted_corpus
+
+
+def get_most_frequent_icd10_codes():
+    print("Getting most frequent tokens in our phenotype data...")
+    counted_corpus = phenotype_quantification()
+    qatari_data = DataLoader(os.getenv("DATA")).get_qatari_data()
+    get_icd10_matches(qatari_data, counted_corpus)
+    # TODO 1: Count the occurrences of the filtered icd10 indications in the qatari data
 
 
 if __name__ == "__main__":
     load_dotenv()
-    phenotype_quantification()
+    get_most_frequent_icd10_codes()
     # logreg_allele_analysis("TRPV1")
