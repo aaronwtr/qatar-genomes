@@ -2,7 +2,6 @@ import os
 from tqdm import tqdm
 import pandas as pd
 from scipy.stats import fisher_exact
-import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt
 import numpy as np
 import nltk
@@ -169,16 +168,24 @@ def create_wordcloud(tokens):
 def get_icd10_matches(qatari_data, top_phenotype_tokens, n=100):
     qatari_phenotypes = extract_patient_phenotypes(qatari_data)
     qatari_phenotypes = [phenotype[0].split(',') for phenotype in qatari_phenotypes.values()]
-    qatari_phenotypes = list(set([phenotype for sublist in qatari_phenotypes for phenotype in sublist]))
-    qatari_phenotypes = [phenotype for phenotype in qatari_phenotypes if phenotype != '']
+    qatari_phenotypes_filt = list(set([phenotype for sublist in qatari_phenotypes for phenotype in sublist]))
+    qatari_phenotypes_filt = [phenotype for phenotype in qatari_phenotypes_filt if phenotype != '']
     top_phenotype_tokens = top_phenotype_tokens.most_common(n)
     top_phenotype_tokens = dict(top_phenotype_tokens)
     top_tokens_list = list(top_phenotype_tokens.keys())
     top_icd10 = {}
-    for phenotype in qatari_phenotypes:
+    for phenotype in qatari_phenotypes_filt:
         for token in top_tokens_list:
             if token in phenotype:
                 phe_count = top_phenotype_tokens[token]
                 top_icd10[phenotype] = phe_count
     top_icd10 = dict(sorted(top_icd10.items(), key=lambda item: item[1], reverse=True))
-    return top_icd10
+    top_icd10_counted = {}
+    for key in tqdm(top_icd10.keys()):
+        top_icd10_counted[key] = sum(key in sublist for sublist in qatari_phenotypes)
+    top_icd10_counted = dict(sorted(top_icd10_counted.items(), key=lambda item: item[1], reverse=True))
+    with open('data/top_icd10_counted.csv', 'w') as f:
+        for key in top_icd10_counted.keys():
+            f.write("%s,%s\n" % (key, top_icd10_counted[key]))
+    f.close()
+    return top_icd10_counted

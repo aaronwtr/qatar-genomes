@@ -2,6 +2,7 @@ from utils import *
 from dataloader import DataLoader
 from plot import bar_plot
 from dotenv import load_dotenv
+import statsmodels.formula.api as smf
 import os
 
 
@@ -81,8 +82,9 @@ def get_most_frequent_icd10_codes():
     print("Getting most frequent tokens in our phenotype data...")
     counted_corpus = phenotype_quantification()
     qatari_data = DataLoader(os.getenv("DATA")).get_qatari_data()
+    print("Counting official ICD10 indications...")
     get_icd10_matches(qatari_data, counted_corpus)
-    # TODO 1: Count the occurrences of the filtered icd10 indications in the qatari data
+    print(f"The ICD 10 counts have been saved to {os.getcwd()}/data/top_icd10_counted.csv")
 
 
 if __name__ == "__main__":
