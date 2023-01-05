@@ -20,6 +20,20 @@ def find_diabetic_patients():
     return qatari_data, diabetic_patients
 
 
+def find_patients():
+    """
+    This function finds patients with a particular phenotype in order to carry out PheWAS.
+    """
+    print("Loading data...")
+    qatari_data = DataLoader(os.getenv("DATA")).get_qatari_data()
+    print("Data loaded.")
+    print("Parsing patient phenotypes...")
+    patient_phenotypes = splitted_patient_phenotypes(qatari_data)
+    print(patient_phenotypes)
+    # TODO 1: Given an ICD10 indication, find all the patients with that indication. Then, run the logreg association
+    #  for all genes in the dataset to find the most significant associations.
+
+
 def fisher_allele_analysis(gene):
     """
     This function analyses the association between homozygous alleles and a particular phenotype, specifically diabetes.
@@ -49,7 +63,6 @@ def logreg_allele_analysis(gene):
     This function analyses the association between alleles and a particular phenotype by using a simple logistic
     regression model.
     :param gene: Gene name you want to test for phenotypic association
-    :return:
     """
     print("Getting feature data for logistic regression model...")
     qatari_data, diabetic_patients = find_diabetic_patients()
@@ -89,5 +102,4 @@ def get_most_frequent_icd10_codes():
 
 if __name__ == "__main__":
     load_dotenv()
-    get_most_frequent_icd10_codes()
-    # logreg_allele_analysis("TRPV1")
+    find_patients()

@@ -28,6 +28,24 @@ def extract_patient_phenotypes(df):
     return patient_phenotypes
 
 
+def splitted_patient_phenotypes(df):
+    """
+    This function takes in the Qatari genome data and creates a dictionary with an entry for each patient, where the key
+    is the patient ID and the value is a list of the patient's phenotypes. With this function, the phenotypes get split
+    by comma.
+    """
+    patient_phenotypes = {}
+    for index, row in df.iterrows():
+        patient_id = row[os.getenv("PATIENT_ID")]
+        phenotype = str(row[os.getenv("PHENOTYPE_ID")])
+        if phenotype == 'nan' or patient_id == np.nan:
+            continue
+        phenotypes = row[os.getenv("PHENOTYPE_ID")].split(';')
+        phenotypes = [phenotype.split(',') for phenotype in phenotypes][0]
+        patient_phenotypes[int(patient_id)] = phenotypes
+    return patient_phenotypes
+
+
 def count_diabetic_patients(patient_dict):
     """
     This function takes in the patient dictionary and counts the number of patients with diabetes. Care must be taken
@@ -184,7 +202,7 @@ def get_icd10_matches(qatari_data, top_phenotype_tokens, n=100):
     for key in tqdm(top_icd10.keys()):
         top_icd10_counted[key] = sum(key in sublist for sublist in qatari_phenotypes)
     top_icd10_counted = dict(sorted(top_icd10_counted.items(), key=lambda item: item[1], reverse=True))
-    with open('data/top_icd10_counted.csv', 'w') as f:
+    with open('data/top_icd10_counted_2.csv', 'w') as f:
         for key in top_icd10_counted.keys():
             f.write("%s,%s\n" % (key, top_icd10_counted[key]))
     f.close()
