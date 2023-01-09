@@ -156,7 +156,8 @@ def tokenize_corpus(corpus):
     """
     exclusion_list = ['low', 'check', 'foot', 'requested', 'current', 'persons', 'upper', 'examination',
                       'unspecified', 'complication', 'delivery', 'laboratory', 'cohort', 'consultation', 'prescription'
-                      'classified', 'participate', 'single', 'test', 'explanation', 'investigation', 'suspected', 'use',
+                                                                                                         'classified',
+                      'participate', 'single', 'test', 'explanation', 'investigation', 'suspected', 'use',
                       'right', 'left', 'history', 'essential', 'person', 'activity', 'prescription', 'telephone',
                       'without', 'specified', 'disease', 'screening', 'need', 'type', 'diseases', 'syndrome', 'vitamin',
                       'health', 'due', 'severe', 'results', 'findings', 'elsewhere', 'medical']
@@ -172,7 +173,7 @@ def create_wordcloud(tokens):
     This function creates a wordcloud of the phenotypes.
     """
     fdist = FreqDist(tokens)
-    wordcloud = WordCloud(width=800, height=800, background_color='white', min_font_size=10)\
+    wordcloud = WordCloud(width=800, height=800, background_color='white', min_font_size=10) \
         .generate_from_frequencies(fdist)
     plt.figure(figsize=(8, 8), facecolor=None)
     plt.imshow(wordcloud)
@@ -207,3 +208,32 @@ def get_icd10_matches(qatari_data, top_phenotype_tokens, n=100):
             f.write("%s,%s\n" % (key, top_icd10_counted[key]))
     f.close()
     return top_icd10_counted
+
+
+def disease2patient(disease, patient_phenotypes):
+    diseases = disease['disease']
+    d2p = {}
+    patient_hits = []
+    for patient_id, phenotypes in patient_phenotypes.items():
+        for phenotype in phenotypes:
+            if phenotype in diseases:
+                if not patient_hits:
+                    first_phenotype = phenotype
+                patient_hits.append(patient_id)
+                break
+    d2p[first_phenotype] = patient_hits
+    return d2p
+
+
+def find_patients(disease, patient_phenotypes):
+    """
+    This function finds patients with a pa3rticular phenotype in order to carry out PheWAS.
+    """
+    # TODO: For each patient, PheWAS can be run for all genes and consequently collecting
+    #   the strongest associations. Look how you implemented this for TRPV1 and make a function to do this for all
+    #   genes.
+    counted_icd10 = pd.read_excel('data/top_icd10_counted.xlsb', sheet_name='top_icd10_counted', index_col=False,
+                                  names=['disease', 'counts'])
+    disease = counted_icd10.loc[counted_icd10['disease'].str.contains('diabetes'), :].iloc[0]
+    d2p = disease2patient(disease, patient_phenotypes)
+    print(d2p)

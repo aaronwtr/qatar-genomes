@@ -20,18 +20,14 @@ def find_diabetic_patients():
     return qatari_data, diabetic_patients
 
 
-def find_patients():
-    """
-    This function finds patients with a particular phenotype in order to carry out PheWAS.
-    """
+def phewas(disease):
     print("Loading data...")
     qatari_data = DataLoader(os.getenv("DATA")).get_qatari_data()
     print("Data loaded.")
     print("Parsing patient phenotypes...")
     patient_phenotypes = splitted_patient_phenotypes(qatari_data)
-    print(patient_phenotypes)
-    # TODO 1: Given an ICD10 indication, find all the patients with that indication. Then, run the logreg association
-    #  for all genes in the dataset to find the most significant associations.
+    print(f"Getting the counted disease data for {disease}...")
+    find_patients("diabetes", patient_phenotypes)
 
 
 def fisher_allele_analysis(gene):
@@ -102,4 +98,4 @@ def get_most_frequent_icd10_codes():
 
 if __name__ == "__main__":
     load_dotenv()
-    find_patients()
+    phewas("diabetes")
