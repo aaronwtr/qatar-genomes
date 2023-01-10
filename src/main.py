@@ -27,7 +27,11 @@ def phewas(disease):
     print("Parsing patient phenotypes...")
     patient_phenotypes = splitted_patient_phenotypes(qatari_data)
     print(f"Getting the counted disease data for {disease}...")
-    find_patients("diabetes", patient_phenotypes)
+    d2p = find_patients("diabetes", patient_phenotypes)
+    print("Disease mapped to patients.")
+    print("Performing logistic regression...")
+    logreg(qatari_data, d2p)
+
 
 
 def fisher_allele_analysis(gene):

@@ -225,15 +225,35 @@ def disease2patient(disease, patient_phenotypes):
     return d2p
 
 
-def find_patients(disease, patient_phenotypes):
+def find_patients(_disease, patient_phenotypes):
     """
-    This function finds patients with a pa3rticular phenotype in order to carry out PheWAS.
+    This function finds patients with a particular phenotype in order to carry out PheWAS.
     """
-    # TODO: For each patient, PheWAS can be run for all genes and consequently collecting
-    #   the strongest associations. Look how you implemented this for TRPV1 and make a function to do this for all
-    #   genes.
     counted_icd10 = pd.read_excel('data/top_icd10_counted.xlsb', sheet_name='top_icd10_counted', index_col=False,
                                   names=['disease', 'counts'])
-    disease = counted_icd10.loc[counted_icd10['disease'].str.contains('diabetes'), :].iloc[0]
+    disease = counted_icd10.loc[counted_icd10['disease'].str.contains(_disease), :].iloc[0]
     d2p = disease2patient(disease, patient_phenotypes)
-    print(d2p)
+    return d2p
+
+
+def logreg(qatari_data, d2p):
+    """
+    This function performs logistic regression to find associations between a given phenotype/disease, and all of the
+    genes in the qatari data.
+    """
+    patient_ids = list(d2p.values())[0]
+    diseased_patients = qatari_data[qatari_data['Dummy ID for GEL'].isin(patient_ids)]
+    print(diseased_patients.shape)
+    # TODO: Rework the diseased_patients dataframe similar to original logreg implementation and return the features
+    
+    # gene_data = qatari_data.dropna(how='all')
+    # gene_data = gene_data.replace("Hom", "Hom_mut")
+    # gene_data = gene_data.fillna("Hom_wt")
+    # gene_data['diabetes'] = gene_data['ICD-10 phenotype'].apply(lambda x: 1 if 'diabetes' in x.lower() and 'type 1'
+    #                                                                            not in x.lower() else 0)
+    # gene_data['gender_bin'] = gene_data['gender'].apply(lambda x: 1 if x == 'FEMALE' else 0)
+    # gene_data['allele_hom_mut'] = gene_data[gene_data.columns[4]].apply(lambda x: 1 if x == 'Hom_mut' else 0)
+    # gene_data['allele_het'] = gene_data[gene_data.columns[4]].apply(lambda x: 1 if x == 'Het' else 0)
+    # features_hom_mut = gene_data[['gender_bin', 'age', 'allele_hom_mut', 'diabetes']]
+    # features_het = gene_data[['gender_bin', 'age', 'allele_het', 'diabetes']]
+    # return features_hom_mut, features_het
