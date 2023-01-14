@@ -3,12 +3,14 @@ from tqdm import tqdm
 import pandas as pd
 from scipy.stats import fisher_exact
 import matplotlib.pyplot as plt
+import warnings
 import numpy as np
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.probability import FreqDist
 from wordcloud import WordCloud
+import statsmodels.formula.api as smf
 
 
 def extract_patient_phenotypes(df):
@@ -236,24 +238,43 @@ def find_patients(_disease, patient_phenotypes):
     return d2p
 
 
-def logreg(qatari_data, d2p):
+def process_patients(qatari_data, d2p, _disease):
+    patient_ids = list(d2p.values())[0]
+    qatari_data[_disease] = qatari_data['Dummy ID for GEL'].apply(lambda x: 1 if x in patient_ids else 0)
+    diseased_patients = qatari_data.dropna(how='all')
+    diseased_patients = diseased_patients.replace("Hom", "Hom_mut")
+    diseased_patients = diseased_patients.fillna("Hom_wt")
+    return diseased_patients
+
+
+def fetch_logreg_features(diseased_patients, gene):
     """
     This function performs logistic regression to find associations between a given phenotype/disease, and all of the
     genes in the qatari data.
     """
-    patient_ids = list(d2p.values())[0]
-    diseased_patients = qatari_data[qatari_data['Dummy ID for GEL'].isin(patient_ids)]
-    print(diseased_patients.shape)
-    # TODO: Rework the diseased_patients dataframe similar to original logreg implementation and return the features
-    
-    # gene_data = qatari_data.dropna(how='all')
-    # gene_data = gene_data.replace("Hom", "Hom_mut")
-    # gene_data = gene_data.fillna("Hom_wt")
-    # gene_data['diabetes'] = gene_data['ICD-10 phenotype'].apply(lambda x: 1 if 'diabetes' in x.lower() and 'type 1'
-    #                                                                            not in x.lower() else 0)
-    # gene_data['gender_bin'] = gene_data['gender'].apply(lambda x: 1 if x == 'FEMALE' else 0)
-    # gene_data['allele_hom_mut'] = gene_data[gene_data.columns[4]].apply(lambda x: 1 if x == 'Hom_mut' else 0)
-    # gene_data['allele_het'] = gene_data[gene_data.columns[4]].apply(lambda x: 1 if x == 'Het' else 0)
-    # features_hom_mut = gene_data[['gender_bin', 'age', 'allele_hom_mut', 'diabetes']]
-    # features_het = gene_data[['gender_bin', 'age', 'allele_het', 'diabetes']]
-    # return features_hom_mut, features_het
+    warnings.filterwarnings("ignore")
+    disease_name = diseased_patients.columns[-1]
+    gene_df = diseased_patients[['gender', gene, 'age', disease_name]]
+    gene_df['gender_bin'] = gene_df['gender'].apply(lambda x: 1 if x == 'FEMALE' else 0)
+    gene_df['allele_hom_mut'] = gene_df[gene_df.columns[1]].apply(lambda x: 1 if x == 'Hom_mut' else 0)
+    gene_df['allele_het'] = gene_df[gene_df.columns[1]].apply(lambda x: 1 if x == 'Het' else 0)
+    features_hom_mut = gene_df[['gender_bin', 'age', 'allele_hom_mut', disease_name]]
+    features_het = gene_df[[f'gender_bin', 'age', 'allele_het', disease_name]]
+    warnings.filterwarnings("default")
+    return features_hom_mut, features_het
+
+
+def logreg(features):
+    allele = features.columns[2]
+    __disease = features.columns[-1]
+    return smf.logit(f"{__disease} ~ gender_bin + age + {allele}", features).fit(method='bfgs', maxiter=10000)
+
+
+def get_pval(model):
+    model_summary = model.summary()
+    summary_html = model_summary.tables[1].as_html()
+    summary_df = pd.read_html(summary_html, header=0, index_col=0)[0]
+    index = summary_df.index.tolist()
+    cols = summary_df.columns
+    pval = float(summary_df.loc[index[-1], cols[3]])
+    return pval

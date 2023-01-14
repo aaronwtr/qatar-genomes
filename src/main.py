@@ -1,3 +1,5 @@
+import pandas as pd
+
 from utils import *
 from dataloader import DataLoader
 from plot import bar_plot
@@ -26,12 +28,24 @@ def phewas(disease):
     print("Data loaded.")
     print("Parsing patient phenotypes...")
     patient_phenotypes = splitted_patient_phenotypes(qatari_data)
-    print(f"Getting the counted disease data for {disease}...")
-    d2p = find_patients("diabetes", patient_phenotypes)
+    print(f"Mapping the patient data to the disease of interest for {disease}...")
+    d2p = find_patients(disease, patient_phenotypes)
+    diseased_patients = process_patients(qatari_data, d2p, disease)
+    genes = list(diseased_patients.columns[4:])[:-1]
     print("Disease mapped to patients.")
-    print("Performing logistic regression...")
-    logreg(qatari_data, d2p)
+    print("Running logistic regression and collecting summary statistics...")
+    pvals = []
+    for gene in tqdm(genes):
 
+        hom_features, het_features = fetch_logreg_features(diseased_patients, gene)
+        hom_mut_model = logreg(hom_features)
+        het_model = logreg(het_features)
+        pval_hom_mut = get_pval(hom_mut_model)
+        pval_het = get_pval(het_model)
+        pvals.append([gene, pval_hom_mut, pval_het])
+    pvals_df = pd.DataFrame(pvals, columns=["Genes", "P-value homozygous mutated allele",
+                                            "P-value heterozygous allele"])
+    pvals_df.to_csv(f"data/pvals/{disease}.csv")
 
 
 def fisher_allele_analysis(gene):
@@ -68,8 +82,8 @@ def logreg_allele_analysis(gene):
     qatari_data, diabetic_patients = find_diabetic_patients()
     gene_data = DataLoader(qatari_data).get_gene_data(gene)
     hom_mut_features, het_features = get_logreg_features(gene_data)
-    hom_mut_model = smf.logit("diabetes ~ allele_hom_mut + age + gender_bin", hom_mut_features).fit()
-    het_model = smf.logit("diabetes ~ allele_het + age + gender_bin", het_features).fit()
+    hom_mut_model = smf.logit("diabetes ~ allele_hom_mut + age + gender_bin", hom_mut_features).fit(method='bfgs')
+    het_model = smf.logit("diabetes ~ allele_het + age + gender_bin", het_features).fit(method='bfgs')
     print(f"Homologous mutant model: {hom_mut_model.summary()}")
     print(f"Heterozygous model: {het_model.summary()}")
 
