@@ -260,6 +260,10 @@ def fetch_logreg_features(diseased_patients, gene):
     gene_df['allele_het'] = gene_df[gene_df.columns[1]].apply(lambda x: 1 if x == 'Het' else 0)
     features_hom_mut = gene_df[['gender_bin', 'age', 'allele_hom_mut', disease_name]]
     features_het = gene_df[[f'gender_bin', 'age', 'allele_het', disease_name]]
+    if " " in disease_name:
+        disease_joined = "_".join(disease_name.split())
+    features_hom_mut.rename(columns={disease_name: disease_joined}, inplace=True)
+    features_het.rename(columns={disease_name: disease_joined}, inplace=True)
     warnings.filterwarnings("default")
     return features_hom_mut, features_het
 
@@ -267,7 +271,7 @@ def fetch_logreg_features(diseased_patients, gene):
 def logreg(features):
     allele = features.columns[2]
     __disease = features.columns[-1]
-    return smf.logit(f"{__disease} ~ gender_bin + age + {allele}", features).fit(method='bfgs', maxiter=10000)
+    return smf.logit(f"{__disease} ~ gender_bin + age + {allele}", features).fit(method='bfgs', maxiter=10000, disp=0)
 
 
 def get_pval(model):

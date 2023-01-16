@@ -1,11 +1,12 @@
+from dotenv import load_dotenv
 import pandas as pd
+import statsmodels.formula.api as smf
+import os
+import warnings
 
 from utils import *
 from dataloader import DataLoader
 from plot import bar_plot
-from dotenv import load_dotenv
-import statsmodels.formula.api as smf
-import os
 
 
 def find_diabetic_patients():
@@ -35,17 +36,23 @@ def phewas(disease):
     print("Disease mapped to patients.")
     print("Running logistic regression and collecting summary statistics...")
     pvals = []
+    warnings.filterwarnings("ignore")
     for gene in tqdm(genes):
-
         hom_features, het_features = fetch_logreg_features(diseased_patients, gene)
+        disease_count = hom_features[list(hom_features.columns)[-1]].sum(axis=0)
+        hom_mut_count = hom_features["allele_hom_mut"].sum(axis=0)
+        het_count = het_features["allele_het"].sum(axis=0)
         hom_mut_model = logreg(hom_features)
         het_model = logreg(het_features)
         pval_hom_mut = get_pval(hom_mut_model)
         pval_het = get_pval(het_model)
-        pvals.append([gene, pval_hom_mut, pval_het])
+        pvals.append(
+            [gene, pval_hom_mut, f'{hom_mut_count}/{disease_count}', pval_het, f'{het_count}/{disease_count}'])
     pvals_df = pd.DataFrame(pvals, columns=["Genes", "P-value homozygous mutated allele",
-                                            "P-value heterozygous allele"])
+                                            "Homozygous mutated allele count", "P-value heterozygous allele",
+                                            "Heterozygous allele count"])
     pvals_df.to_csv(f"data/pvals/{disease}.csv")
+    warnings.filterwarnings("default")
 
 
 def fisher_allele_analysis(gene):
@@ -116,4 +123,4 @@ def get_most_frequent_icd10_codes():
 
 if __name__ == "__main__":
     load_dotenv()
-    phewas("diabetes")
+    phewas("Vitamin D deficiency")
