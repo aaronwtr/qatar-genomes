@@ -42,10 +42,16 @@ def phewas(disease):
         disease_count = hom_features[list(hom_features.columns)[-1]].sum(axis=0)
         hom_mut_count = hom_features["allele_hom_mut"].sum(axis=0)
         het_count = het_features["allele_het"].sum(axis=0)
-        hom_mut_model = logreg(hom_features)
-        het_model = logreg(het_features)
-        pval_hom_mut = get_pval(hom_mut_model)
-        pval_het = get_pval(het_model)
+        if hom_mut_count > 0:
+            hom_mut_model = logreg(hom_features)
+            pval_hom_mut = get_pval(hom_mut_model)
+        else:
+            pval_hom_mut = 1
+        if het_count > 0:
+            het_model = logreg(het_features)
+            pval_het = get_pval(het_model)
+        else:
+            pval_het = 1
         pvals.append(
             [gene, pval_hom_mut, f'{hom_mut_count}/{disease_count}', pval_het, f'{het_count}/{disease_count}'])
     pvals_df = pd.DataFrame(pvals, columns=["Genes", "P-value homozygous mutated allele",
@@ -123,4 +129,4 @@ def get_most_frequent_icd10_codes():
 
 if __name__ == "__main__":
     load_dotenv()
-    phewas("Vitamin D deficiency")
+    phewas("Acute gastroenteritis")

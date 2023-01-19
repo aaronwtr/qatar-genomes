@@ -262,9 +262,11 @@ def fetch_logreg_features(diseased_patients, gene):
     features_het = gene_df[[f'gender_bin', 'age', 'allele_het', disease_name]]
     if " " in disease_name:
         disease_joined = "_".join(disease_name.split())
-    features_hom_mut.rename(columns={disease_name: disease_joined}, inplace=True)
-    features_het.rename(columns={disease_name: disease_joined}, inplace=True)
-    warnings.filterwarnings("default")
+        disease_name_check = disease_joined
+    else:
+        disease_name_check = disease_name
+    features_hom_mut.rename(columns={disease_name: disease_name_check}, inplace=True)
+    features_het.rename(columns={disease_name: disease_name_check}, inplace=True)
     return features_hom_mut, features_het
 
 
