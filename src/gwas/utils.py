@@ -44,6 +44,7 @@ def splitted_patient_phenotypes(df):
             continue
         phenotypes = row[os.getenv("PHENOTYPE_ID")].split(';')
         phenotypes = [phenotype.split(',') for phenotype in phenotypes][0]
+        phenotypes = [phenotype.strip().lower() for phenotype in phenotypes]
         patient_phenotypes[int(patient_id)] = phenotypes
     return patient_phenotypes
 
@@ -229,7 +230,7 @@ def disease2patient(disease, patient_phenotypes):
 
 def find_patients(_disease, patient_phenotypes):
     """
-    This function finds patients with a particular phenotype in order to carry out PheWAS.
+    This function finds patients with a particular phenotype in order to carry out GWAS.
     """
     counted_icd10 = pd.read_excel('data/top_icd10_counted.xlsb', sheet_name='top_icd10_counted', index_col=False,
                                   names=['disease', 'counts'])
@@ -284,3 +285,4 @@ def get_pval(model):
     cols = summary_df.columns
     pval = float(summary_df.loc[index[-1], cols[3]])
     return pval
+

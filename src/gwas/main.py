@@ -23,7 +23,7 @@ def find_diabetic_patients():
     return qatari_data, diabetic_patients
 
 
-def phewas(disease):
+def gwas(disease):
     print("Loading data...")
     qatari_data = DataLoader(os.getenv("DATA")).get_qatari_data()
     print("Data loaded.")
@@ -129,4 +129,5 @@ def get_most_frequent_icd10_codes():
 
 if __name__ == "__main__":
     load_dotenv()
-    phewas("Acute gastroenteritis")
+    gwas("Acute gastroenteritis")
+
