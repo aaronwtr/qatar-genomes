@@ -5,7 +5,7 @@ import os
 import warnings
 
 from utils import *
-from src.gwas.utils import extract_patient_phenotypes, splitted_patient_phenotypes
+from src.gwas.utils import splitted_patient_phenotypes
 from dataloader import DataLoader
 
 
@@ -21,7 +21,12 @@ def phenotype_preprocessing():
     print("Data loaded.")
     print("Parsing patient phenotypes...")
     patient_phenotypes = splitted_patient_phenotypes(qatari_data)
-    print(patient_phenotypes)
+    print("Patient phenotypes parsed.")
+    print("Performing Phenotype to ICD10 mapping...")
+    icd10_mapping = open_icd10_mapping(os.getenv("ICD10_MAP"))
+    phecode_mapping = open_phecode_mapping(os.getenv("ICD10_MAP"))
+    patient_icd10, no_icd10_found = patient_icd10_map(patient_phenotypes, icd10_mapping, phecode_mapping)
+    print(no_icd10_found)
 
 
 if __name__ == "__main__":
