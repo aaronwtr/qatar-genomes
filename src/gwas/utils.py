@@ -44,7 +44,7 @@ def splitted_patient_phenotypes(df):
             continue
         phenotypes = row[os.getenv("PHENOTYPE_ID")].split(';')
         phenotypes = [phenotype.split(',') for phenotype in phenotypes][0]
-        phenotypes = [phenotype.strip().lower() for phenotype in phenotypes]
+        phenotypes = [phenotype.lstrip().lower() for phenotype in phenotypes]
         patient_phenotypes[int(patient_id)] = phenotypes
     return patient_phenotypes
 

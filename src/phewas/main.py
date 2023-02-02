@@ -1,8 +1,5 @@
 from dotenv import load_dotenv
-import pandas as pd
-import statsmodels.formula.api as smf
 import os
-import warnings
 
 from utils import *
 from src.gwas.utils import splitted_patient_phenotypes
@@ -26,7 +23,18 @@ def phenotype_preprocessing():
     icd10_mapping = open_icd10_mapping(os.getenv("ICD10_MAP"))
     phecode_mapping = open_phecode_mapping(os.getenv("ICD10_MAP"))
     patient_icd10, no_icd10_found = patient_icd10_map(patient_phenotypes, icd10_mapping, phecode_mapping)
-    print(no_icd10_found)
+    no_icd10 = []
+    for key, values in no_icd10_found.items():
+        for value in values:
+            no_icd10.append(value)
+
+    icd10 = []
+    for key, values in patient_icd10.items():
+        for value in values:
+            icd10.append(value)
+
+    print(len(icd10))
+    print(len(no_icd10))
 
 
 if __name__ == "__main__":
