@@ -22,7 +22,9 @@ def phenotype_preprocessing():
     print("Performing Phenotype to ICD10 mapping...")
     icd10_mapping = open_icd10_mapping(os.getenv("ICD10_MAP"))
     phecode_mapping = open_phecode_mapping(os.getenv("ICD10_MAP"))
-    patient_icd10, no_icd10_found = patient_icd10_map(patient_phenotypes, icd10_mapping, phecode_mapping)
+    snomed_mapping = open_snomed_mapping(os.getenv("SNOMED_MAP"), icd10_mapping)
+    patient_icd10, no_icd10_found = patient_icd10_map(patient_phenotypes, icd10_mapping, phecode_mapping,
+                                                      snomed_mapping)
     no_icd10 = []
     for key, values in no_icd10_found.items():
         for value in values:

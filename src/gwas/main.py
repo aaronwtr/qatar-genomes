@@ -57,7 +57,7 @@ def gwas(disease):
     pvals_df = pd.DataFrame(pvals, columns=["Genes", "P-value homozygous mutated allele",
                                             "Homozygous mutated allele count", "P-value heterozygous allele",
                                             "Heterozygous allele count"])
-    pvals_df.to_csv(f"data/pvals/{disease}.csv")
+    pvals_df.to_csv(f"outputs/pvals/{disease}.csv")
     warnings.filterwarnings("default")
 
 
