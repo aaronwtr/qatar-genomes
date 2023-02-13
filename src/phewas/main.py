@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 from utils import *
-from src.gwas.utils import splitted_patient_phenotypes
+from src.gwas.utils import splitted_patient_phenotypes, corpusify_phenotypes, tokenize_corpus, create_wordcloud
 from dataloader import DataLoader
 
 
@@ -26,7 +26,7 @@ def phenotype_preprocessing():
     snomed_mapping = open_snomed_mapping(os.getenv("SNOMED_MAP"), icd10_mapping)
     patient_icd10, no_icd10_found = patient_icd10_map(patient_phenotypes, icd10_mapping, phecode_mapping,
                                                       snomed_mapping)
-    print(icd10_mapping)
+    print(patient_icd10)
     unique_phens_found = calculate_unique_phenotypes(patient_icd10)
     unique_phens_not_found = calculate_unique_phenotypes(no_icd10_found)
     print(f"Mapped {unique_phens_found} unique phenotypes out of {unique_phens_not_found + unique_phens_found} ("
@@ -45,6 +45,12 @@ def phenotype_preprocessing():
     print(f"Mapped {len(icd10)} patient phenotypes out of {len(icd10) + len(no_icd10)} "
           f"({np.round((len(icd10) / (len(icd10) + len(no_icd10)) * 100), 2)}%) patient phenotypes in the Qatari "
           f"dataset.")
+    # TODO Fix below! Also check where non icd10 phenotypes are coming from.
+    corpus = corpusify_phenotypes(patient_icd10)
+    tokenized_corpus = tokenize_corpus(corpus)
+    print("Patient phenotypes tokenized.")
+    print("Creating wordcloud...")
+    counted_corpus = create_wordcloud(tokenized_corpus)
 
 
 if __name__ == "__main__":

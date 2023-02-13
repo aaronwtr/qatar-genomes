@@ -52,7 +52,6 @@ def patient_icd10_map(patient_phenotype_dict, icd10_map, phecode_map, snomed_map
                 continue
             line = line.strip().split(',')
             manual_icd10[line[0]] = line[1]
-
     for patient, phenotypes in tqdm(patient_phenotype_dict.items()):
         icd10_codes = []
         for phenotype in phenotypes:
@@ -68,7 +67,7 @@ def patient_icd10_map(patient_phenotype_dict, icd10_map, phecode_map, snomed_map
                 else:
                     no_icd10_found[patient].append(phenotype)
         patient_icd10[patient] = icd10_codes
-        merged = {**manual_icd10, **patient_icd10}
+    merged = {**manual_icd10, **patient_icd10}
     return merged, no_icd10_found
 
 
