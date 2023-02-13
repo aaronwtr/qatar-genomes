@@ -45,6 +45,14 @@ def patient_icd10_map(patient_phenotype_dict, icd10_map, phecode_map, snomed_map
     ICD10 codes for that patient."""
     patient_icd10 = {}
     no_icd10_found = {}
+    with open('../data/manual_icd10_entries.csv', 'r') as f:
+        manual_icd10 = {}
+        for line in f:
+            if line.startswith('\ufeffterm'):
+                continue
+            line = line.strip().split(',')
+            manual_icd10[line[0]] = line[1]
+
     for patient, phenotypes in tqdm(patient_phenotype_dict.items()):
         icd10_codes = []
         for phenotype in phenotypes:
@@ -52,12 +60,22 @@ def patient_icd10_map(patient_phenotype_dict, icd10_map, phecode_map, snomed_map
                 icd10_codes.append(icd10_map[phenotype])
             elif phenotype in list(phecode_map.keys()):
                 icd10_codes.append(phecode_map[phenotype])
-            # elif phenotype in list(snomed_map.keys()):
-            #     icd10_codes.append(snomed_map[phenotype])
+            elif phenotype in list(snomed_map.keys()):
+                icd10_codes.append(snomed_map[phenotype])
             else:
                 if patient not in no_icd10_found.keys():
                     no_icd10_found[patient] = [phenotype]
                 else:
                     no_icd10_found[patient].append(phenotype)
         patient_icd10[patient] = icd10_codes
-    return patient_icd10, no_icd10_found
+        merged = {**manual_icd10, **patient_icd10}
+    return merged, no_icd10_found
+
+
+def calculate_unique_phenotypes(patient_icd10_dict):
+    """Calculate the number of unique phenotypes in the patient_icd10 dictionary."""
+    unique_phenotypes = set()
+    for key, values in patient_icd10_dict.items():
+        for value in values:
+            unique_phenotypes.add(value)
+    return len(unique_phenotypes)
