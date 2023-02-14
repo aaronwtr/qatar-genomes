@@ -1,9 +1,10 @@
 from dotenv import load_dotenv
-import os
 import numpy as np
+import nltk
 
 from utils import *
-from src.gwas.utils import splitted_patient_phenotypes, corpusify_phenotypes, tokenize_corpus, create_wordcloud
+from src.gwas.utils import splitted_patient_phenotypes, corpusify_phenotypes, tokenize_phewas_corpus, create_wordcloud, \
+    map_tokens_to_phenotypes
 from dataloader import DataLoader
 
 
@@ -26,7 +27,7 @@ def phenotype_preprocessing():
     snomed_mapping = open_snomed_mapping(os.getenv("SNOMED_MAP"), icd10_mapping)
     patient_icd10, no_icd10_found = patient_icd10_map(patient_phenotypes, icd10_mapping, phecode_mapping,
                                                       snomed_mapping)
-    print(patient_icd10)
+    mappings = {**icd10_mapping, **phecode_mapping, **snomed_mapping}
     unique_phens_found = calculate_unique_phenotypes(patient_icd10)
     unique_phens_not_found = calculate_unique_phenotypes(no_icd10_found)
     print(f"Mapped {unique_phens_found} unique phenotypes out of {unique_phens_not_found + unique_phens_found} ("
@@ -45,12 +46,19 @@ def phenotype_preprocessing():
     print(f"Mapped {len(icd10)} patient phenotypes out of {len(icd10) + len(no_icd10)} "
           f"({np.round((len(icd10) / (len(icd10) + len(no_icd10)) * 100), 2)}%) patient phenotypes in the Qatari "
           f"dataset.")
-    # TODO Fix below! Also check where non icd10 phenotypes are coming from.
+
     corpus = corpusify_phenotypes(patient_icd10)
-    tokenized_corpus = tokenize_corpus(corpus)
+    tokenized_corpus = tokenize_phewas_corpus(corpus)
+    phenotype_counts = map_tokens_to_phenotypes(tokenized_corpus, mappings)
+    phenotype_counts = nltk.FreqDist(phenotype_counts)
     print("Patient phenotypes tokenized.")
     print("Creating wordcloud...")
-    counted_corpus = create_wordcloud(tokenized_corpus)
+    counted_corpus = create_wordcloud(phenotype_counts, title="Wordcloud of mapped phenotypes")
+
+    corpus = corpusify_phenotypes(no_icd10_found, mapped=False)
+    tokenized_corpus = tokenize_phewas_corpus(corpus)
+    phenotype_counts = dict(tokenized_corpus)
+    counted_corpus = create_wordcloud(phenotype_counts, title="Wordcloud of non-mapped phenotypes")
 
 
 if __name__ == "__main__":

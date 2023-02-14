@@ -1,4 +1,6 @@
 from tqdm import tqdm
+import pickle as pkl
+import os
 
 
 def open_icd10_mapping(path_to_map):
@@ -43,31 +45,52 @@ def open_snomed_mapping(path_to_map, icd10_map):
 def patient_icd10_map(patient_phenotype_dict, icd10_map, phecode_map, snomed_map):
     """Map the phenotypes to ICD10 and save in a dictionary where the key is the patient id and the values are the
     ICD10 codes for that patient."""
-    patient_icd10 = {}
-    no_icd10_found = {}
-    with open('../data/manual_icd10_entries.csv', 'r') as f:
-        manual_icd10 = {}
-        for line in f:
-            if line.startswith('\ufeffterm'):
-                continue
-            line = line.strip().split(',')
-            manual_icd10[line[0]] = line[1]
-    for patient, phenotypes in tqdm(patient_phenotype_dict.items()):
-        icd10_codes = []
-        for phenotype in phenotypes:
-            if phenotype in list(icd10_map.keys()):
-                icd10_codes.append(icd10_map[phenotype])
-            elif phenotype in list(phecode_map.keys()):
-                icd10_codes.append(phecode_map[phenotype])
-            elif phenotype in list(snomed_map.keys()):
-                icd10_codes.append(snomed_map[phenotype])
-            else:
-                if patient not in no_icd10_found.keys():
-                    no_icd10_found[patient] = [phenotype]
+    if os.path.exists('../data/full_icd10_map.pkl'):
+        with open('../data/full_icd10_map.pkl', 'rb') as f:
+            merged = pkl.load(f)
+        f.close()
+
+        with open('../data/no_icd10_found.pkl', 'rb') as f:
+            no_icd10_found = pkl.load(f)
+        f.close()
+        return merged, no_icd10_found
+    else:
+        patient_icd10 = {}
+        no_icd10_found = {}
+        with open('../data/manual_icd10_entries.csv', 'r') as f:
+            manual_icd10 = {}
+            for line in f:
+                if line.startswith('\ufeffterm'):
+                    continue
+                line = line.strip().split(',')
+                manual_icd10[line[0]] = line[1]
+        for patient, phenotypes in tqdm(patient_phenotype_dict.items()):
+            icd10_codes = []
+            for phenotype in phenotypes:
+                if phenotype in list(icd10_map.keys()):
+                    if ' ' not in icd10_map[phenotype]:
+                        icd10_codes.append(icd10_map[phenotype])
+                elif phenotype in list(phecode_map.keys()):
+                    if ' ' not in phecode_map[phenotype]:
+                        icd10_codes.append(phecode_map[phenotype])
+                elif phenotype in list(snomed_map.keys()):
+                    if ' ' not in snomed_map[phenotype]:
+                        icd10_codes.append(snomed_map[phenotype])
                 else:
-                    no_icd10_found[patient].append(phenotype)
-        patient_icd10[patient] = icd10_codes
-    merged = {**manual_icd10, **patient_icd10}
+                    if patient not in no_icd10_found.keys():
+                        no_icd10_found[patient] = [phenotype]
+                    else:
+                        no_icd10_found[patient].append(phenotype)
+            patient_icd10[patient] = icd10_codes
+        merged = {**manual_icd10, **patient_icd10}
+
+        with open('../data/full_icd10_map.pkl', 'wb') as f:
+            pkl.dump(merged, f)
+        f.close()
+
+        with open('../data/no_icd10_found.pkl', 'wb') as f:
+            pkl.dump(no_icd10_found, f)
+
     return merged, no_icd10_found
 
 

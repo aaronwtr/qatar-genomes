@@ -5,7 +5,7 @@ from scipy.stats import fisher_exact
 import matplotlib.pyplot as plt
 import warnings
 import numpy as np
-import nltk
+import re
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.probability import FreqDist
@@ -142,14 +142,22 @@ def fisher_exact_test(cont_table):
     return round(pvalue, 3)
 
 
-def corpusify_phenotypes(phenotypes):
+def corpusify_phenotypes(phenotypes, mapped=True):
     """
     This function takes in a dictionary of phenotypes and returns a corpus of the phenotypes.
     """
     corpus = ''
     phenotypes = list(phenotypes.values())
-    for phenotype in phenotypes:
-        corpus += phenotype[0] + ' '
+    if mapped:
+        for phenotype_list in phenotypes:
+            if phenotype_list:
+                for phenotype in phenotype_list:
+                    corpus += phenotype + ' '
+    else:
+        for phenotype in phenotypes:
+            for phen in phenotype:
+                phen = phen.replace(' ', '_')
+                corpus += phen + ' '
     return corpus
 
 
@@ -171,7 +179,37 @@ def tokenize_corpus(corpus):
     return filtered_words
 
 
-def create_wordcloud(tokens):
+def tokenize_phewas_corpus(corpus, mapped=True):
+    fdist = FreqDist()
+    if mapped:
+        for word in word_tokenize(corpus):
+            fdist[word] += 1
+    else:
+        corpus = re.sub(r'[^a-zA-Z0-9_\-]', '', corpus)
+        pattern = re.compile(r'[:()]')
+        corpus = re.sub(pattern, '', corpus)
+        for word in word_tokenize(corpus):
+            fdist[word] += 1
+
+    return fdist
+
+
+def map_tokens_to_phenotypes(tokens, phenotypes):
+    """
+    This function takes in a dictionary of tokens that has a icd10 code in the key and its corresponding frequency in
+    the value. We also take in a dictionary of phenotypes that has a phenotype as its key and the corresponding icd10
+    code as its value. This function should make a dictionary that maps all the icd10 codes from the token dictionary to
+    the corresponding phenotypes such that our final dictionary has the phenotype in its key and the frequency in its
+    value.
+    """
+    token_to_phenotype = {}
+    for phenotype, icd10 in phenotypes.items():
+        if icd10 in tokens:
+            token_to_phenotype[phenotype] = tokens[icd10]
+    return token_to_phenotype
+
+
+def create_wordcloud(tokens, title):
     """
     This function creates a wordcloud of the phenotypes.
     """
@@ -182,7 +220,7 @@ def create_wordcloud(tokens):
     plt.imshow(wordcloud)
     plt.axis("off")
     plt.tight_layout(pad=0)
-    plt.savefig('plots/wordcloud.png')
+    plt.savefig(f'../plots/{title}.png')
 
     return fdist
 
@@ -285,4 +323,3 @@ def get_pval(model):
     cols = summary_df.columns
     pval = float(summary_df.loc[index[-1], cols[3]])
     return pval
-
