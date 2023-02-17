@@ -1,3 +1,4 @@
+import pandas as pd
 from dotenv import load_dotenv
 import numpy as np
 import nltk
@@ -8,7 +9,7 @@ from src.gwas.utils import splitted_patient_phenotypes, corpusify_phenotypes, to
 from dataloader import DataLoader
 
 
-def phenotype_preprocessing():
+def phenotype_preprocessing(wc=False):
     """
     This function should create a dictionary such that each key is a patient ID and a value is a list of homogenized
     phenotypes. Homogenization entails that irregularities in the phenotype strings are removed, such as spaces,
@@ -27,6 +28,7 @@ def phenotype_preprocessing():
     snomed_mapping = open_snomed_mapping(os.getenv("SNOMED_MAP"), icd10_mapping)
     patient_icd10, no_icd10_found = patient_icd10_map(patient_phenotypes, icd10_mapping, phecode_mapping,
                                                       snomed_mapping)
+    print(patient_icd10)
     mappings = {**icd10_mapping, **phecode_mapping, **snomed_mapping}
     unique_phens_found = calculate_unique_phenotypes(patient_icd10)
     unique_phens_not_found = calculate_unique_phenotypes(no_icd10_found)
@@ -46,21 +48,39 @@ def phenotype_preprocessing():
     print(f"Mapped {len(icd10)} patient phenotypes out of {len(icd10) + len(no_icd10)} "
           f"({np.round((len(icd10) / (len(icd10) + len(no_icd10)) * 100), 2)}%) patient phenotypes in the Qatari "
           f"dataset.")
+    if wc:
+        corpus = corpusify_phenotypes(patient_icd10)
+        tokenized_corpus = tokenize_phewas_corpus(corpus)
+        phenotype_counts = map_tokens_to_phenotypes(tokenized_corpus, mappings)
+        phenotype_counts = nltk.FreqDist(phenotype_counts)
+        print("Patient phenotypes tokenized.")
+        print("Creating wordcloud...")
+        create_wordcloud(phenotype_counts, title="Wordcloud of mapped phenotypes")
 
-    corpus = corpusify_phenotypes(patient_icd10)
-    tokenized_corpus = tokenize_phewas_corpus(corpus)
-    phenotype_counts = map_tokens_to_phenotypes(tokenized_corpus, mappings)
-    phenotype_counts = nltk.FreqDist(phenotype_counts)
-    print("Patient phenotypes tokenized.")
-    print("Creating wordcloud...")
-    counted_corpus = create_wordcloud(phenotype_counts, title="Wordcloud of mapped phenotypes")
+        corpus = corpusify_phenotypes(no_icd10_found, mapped=False)
+        tokenized_corpus = tokenize_phewas_corpus(corpus)
+        phenotype_counts = dict(tokenized_corpus)
+        create_wordcloud(phenotype_counts, title="Wordcloud of non-mapped phenotypes")
 
-    corpus = corpusify_phenotypes(no_icd10_found, mapped=False)
-    tokenized_corpus = tokenize_phewas_corpus(corpus)
-    phenotype_counts = dict(tokenized_corpus)
-    counted_corpus = create_wordcloud(phenotype_counts, title="Wordcloud of non-mapped phenotypes")
+
+def phewas(patient_phenotypes, genes):
+    """
+    This function should create a dataframe that contains the covariates and phenotypes needed for a phewas analysis.
+    This function also
+    """
+    print("Loading data...")
+    qatari_data = DataLoader(os.getenv("DATA")).get_qatari_data()
+    print("Data loaded.")
+    print("Parsing patient phenotypes...")
+    make_phewas_table(qatari_data, patient_phenotypes, genes)
 
 
 if __name__ == "__main__":
     load_dotenv()
-    phenotype_preprocessing()
+    files = os.listdir('../data')
+    if 'full_icd10_map.pkl' not in files:
+        phenotype_preprocessing()
+    gene = "TRPV1"
+    patient_phenotypes = pd.read_pickle('../data/full_icd10_map.pkl')
+    print(patient_phenotypes)
+    phewas(patient_phenotypes, gene)

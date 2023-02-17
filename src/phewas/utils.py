@@ -1,5 +1,7 @@
 from tqdm import tqdm
 import pickle as pkl
+import pandas as pd
+import numpy as np
 import os
 
 
@@ -82,7 +84,9 @@ def patient_icd10_map(patient_phenotype_dict, icd10_map, phecode_map, snomed_map
                     else:
                         no_icd10_found[patient].append(phenotype)
             patient_icd10[patient] = icd10_codes
+        # TODO Fix this. Something is wrong with the manual icd10 entries.
         merged = {**manual_icd10, **patient_icd10}
+        print(merged)
 
         with open('../data/full_icd10_map.pkl', 'wb') as f:
             pkl.dump(merged, f)
@@ -101,3 +105,35 @@ def calculate_unique_phenotypes(patient_icd10_dict):
         for value in values:
             unique_phenotypes.add(value)
     return len(unique_phenotypes)
+
+
+def make_phewas_table(qatari_data, patient_phenotypes, gene):
+    phewas_df = qatari_data.loc[:, ['Dummy ID for GEL', 'age', gene, 'gender']]
+    phewas_df = phewas_df.rename(columns={'Dummy ID for GEL': 'patient_id'})
+    phewas_df[gene] = phewas_df[gene].fillna(0)
+    phewas_df[gene] = phewas_df[gene].replace('Hom', 1)
+    phewas_df[gene] = phewas_df[gene].replace('Het', 2)
+    unique_phenotypes = set()
+    for key, values in patient_phenotypes.items():
+        for value in values:
+            unique_phenotypes.add(value)
+    unique_phenotypes = list(unique_phenotypes)
+    patient_ids = phewas_df['patient_id'].tolist()
+    phewas_array = phewas_df['patient_id'].to_numpy().reshape(-1, 1)
+    # constructing phenotype matrix for phewas
+    for phenotype in tqdm(unique_phenotypes):
+        phenotype_column = []
+        for patient_id in patient_ids:
+            if phenotype in patient_phenotypes[patient_id]:
+                phenotype_column.append(1)
+            else:
+                phenotype_column.append(0)
+        phenotype_column = np.array(phenotype_column).reshape(-1, 1)
+        phewas_array = np.hstack((phewas_array, phenotype_column))
+
+    phen_df = pd.DataFrame(phewas_array)
+    phen_df = phen_df.drop(0, axis=1)
+    phen_df.columns = unique_phenotypes
+    phewas_df = pd.concat([phewas_df, phen_df], axis=1)
+    print(phewas_df)
+
