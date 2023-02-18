@@ -28,7 +28,6 @@ def phenotype_preprocessing(wc=False):
     snomed_mapping = open_snomed_mapping(os.getenv("SNOMED_MAP"), icd10_mapping)
     patient_icd10, no_icd10_found = patient_icd10_map(patient_phenotypes, icd10_mapping, phecode_mapping,
                                                       snomed_mapping)
-    print(patient_icd10)
     mappings = {**icd10_mapping, **phecode_mapping, **snomed_mapping}
     unique_phens_found = calculate_unique_phenotypes(patient_icd10)
     unique_phens_not_found = calculate_unique_phenotypes(no_icd10_found)
@@ -82,5 +81,4 @@ if __name__ == "__main__":
         phenotype_preprocessing()
     gene = "TRPV1"
     patient_phenotypes = pd.read_pickle('../data/full_icd10_map.pkl')
-    print(patient_phenotypes)
     phewas(patient_phenotypes, gene)
