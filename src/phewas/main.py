@@ -82,3 +82,5 @@ if __name__ == "__main__":
     gene = "TRPV1"
     patient_phenotypes = pd.read_pickle('../data/full_icd10_map.pkl')
     phewas(patient_phenotypes, gene)
+
+    # TODO: Adjust make_phewas_table such that it contains all the genes in our datasat, not just one.
