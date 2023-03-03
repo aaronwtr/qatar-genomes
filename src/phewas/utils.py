@@ -142,3 +142,35 @@ def make_phewas_table(qatari_data, patient_phenotypes, gene):
         phewas_df = pd.concat([phewas_df, phen_df], axis=1)
         phewas_df.to_excel(f'../data/phewas_tables/{gene}_phewas_table.xlsx', index=False)
         return phewas_df
+
+
+def transform_phewas_table(patient_icd10):
+    manual_icd10 = pd.read_excel('../data/phewas_tables/TRPV1_phewas_table.xlsx', sheet_name=1)
+    icd10_codes = list(manual_icd10.columns)[4:]
+    patient_icd10 = {key: value for key, value in patient_icd10.items() if any(x in value for x in icd10_codes)}
+    for key, value in patient_icd10.items():
+        patient_icd10[key] = [x for x in value if x in icd10_codes]
+
+    patient_ids = []
+    icd10_codes = []
+    vocab = []
+    counts = []
+    cnt = 0
+    for key, value in patient_icd10.items():
+        for code in value:
+            patient_ids.append(key)
+            icd10_codes.append(code)
+            vocab.append('ICD10')
+            if cnt == 0:
+                counts.append(4)
+            else:
+                counts.append(3)
+            cnt+=1
+    patient_ids = np.array(patient_ids).reshape(-1, 1)
+    icd10_codes = np.array(icd10_codes).reshape(-1, 1)
+    vocab = np.array(vocab).reshape(-1, 1)
+    counts = np.array(counts).reshape(-1, 1)
+    icd10_array = np.hstack((patient_ids, vocab, icd10_codes, counts))
+    icd10_array = pd.DataFrame(icd10_array)
+    icd10_array.columns = ['id', 'vocabulary_id', 'code', 'count']
+    icd10_array.to_csv('../data/phewas_tables/TRPV1_icd10_test.csv', index=False)
