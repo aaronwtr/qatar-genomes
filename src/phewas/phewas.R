@@ -9,6 +9,8 @@ setwd("~/Desktop/PhD/Research/QMUL/Research/Qatar Genomes Project/qatar-genomes"
 
 data <- fread("data/phewas_tables/TRPV1_phewas_table.csv")
 
+## Processing phenotype data
+
 # Create sex table
 id.sex <- data[,c("patient_id","gender")]
 id.sex$gender[which(id.sex$gender=="MALE")]<-"M"
@@ -22,7 +24,7 @@ id.sex$gender <- as.factor(id.sex$gender)
 # Read pheno test table
 phenodata <- fread("data/phewas_tables/TRPV1_icd10_test.csv")
 
-# Create Sex table matching the test phenotype table (test subset)
+# Create sex table matching the test phenotype table (test subset)
 id.sex.test <- id.sex[which(id.sex$patient_id %in% as.character(phenodata$id)),]
 head(id.sex.test)
 
@@ -31,11 +33,17 @@ colnames(id.sex)
 
 colnames(phenodata)[1] <- "patient_id"
 
-# Map phenotypes
-
 # TODO Add full.population.ids argument
-phenotyes <- createPhenotypes(phenodata, min.code.count = 1, id.sex = id.sex.test,
-                              vocabulary.map = PheWAS::phecode_map_icd10)
-phenotyes[1:10,]
+phenotypes <- createPhenotypes(phenodata, min.code.count = 1, 
+                               id.sex = id.sex.test, 
+                               vocabulary.map = PheWAS::phecode_map_icd10)
+
+## Processing auxiliary phewas data and genotype of interest
+genotype <- data[, c("TRPV1")]
+
+# TODO Download the example phewas script to inspect how covariates should look like
+covariates <- cbind(id.sex, data[, c("age")])
+
+
 
 
