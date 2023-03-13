@@ -55,5 +55,5 @@ test_data = inner_join(inner_join(covariates, genotype),phenotypes)
 results=phewas(phenotypes=names(phenotypes)[-1], genotypes=c("TRPV1"), 
                covariates=c("age", "ismale"), data=test_data, cores=4)
 
-save(results, "~/Desktop/PhD/Research/QMUL/Research/Qatar Genomes Project/qatar-genomes/phewas.csv", 
+save(results, "~/Desktop/PhD/Research/QMUL/Research/Qatar Genomes Project/qatar-genomes/output/phewas.csv", 
      compress=FALSE)
