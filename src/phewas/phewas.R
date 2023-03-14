@@ -6,7 +6,6 @@ library(dplyr)
 
 
 setwd("~/Desktop/PhD/Research/QMUL/Research/Qatar Genomes Project/qatar-genomes")
-#(data <- read_excel("C:/Enserio/OneDrive - Queen Mary, University of London/Projects/AWenteler/TRPV1_phewas_table.xlsx",sheet = "Sheet1"))
 
 data <- fread("data/phewas_tables/TRPV1_phewas_table.csv")
 
@@ -20,26 +19,23 @@ data$patient_id <- as.character(data$patient_id)
 data$gender <- as.factor(data$gender)
 id.sex$patient_id <- as.character(id.sex$patient_id)
 id.sex$gender <- as.factor(id.sex$gender)
-id.sex$ismale <- ifelse(id.sex$gender == 'M', TRUE, FALSE)
-id.sex <- subset(id.sex, select = -gender)
+# id.sex$ismale <- ifelse(id.sex$gender == 'M', TRUE, FALSE)
+# id.sex <- subset(id.sex, select = -gender)
 
 phenodata <- fread("data/phewas_tables/TRPV1_icd10_test.csv")
+colnames(phenodata)[1] <- "patient_id"
 
 phenodata <- setDT(phenodata)
 phenodata<- phenodata[, patient_id := as.character(patient_id)]
-test_ids <- inner_join(phenodata, genotype, by = "patient_id")
-id.sex.test <- filter(genotype, patient_id %in% joined_genos$patient_id)
+test_ids <- inner_join(phenodata, data, by = "patient_id")
+id.sex.test <- filter(id.sex, patient_id %in% phenodata$patient_id)
 head(id.sex.test)
-
-colnames(phenodata)
-colnames(id.sex)
-
-colnames(phenodata)[1] <- "patient_id"
 
 # TODO Add full.population.ids argument
 phenotypes <- createPhenotypes(phenodata, min.code.count = 1, 
                                id.sex = id.sex.test, 
-                               vocabulary.map = PheWAS::phecode_map_icd10)
+                               vocabulary.map = PheWAS::phecode_map_icd10,
+                               rollup.map=PheWAS::phecode_rollup_map)
 
 ## Processing auxiliary phewas data and genotype of interest
 genotype <- data[, c("patient_id", "TRPV1")]
@@ -53,7 +49,14 @@ covariates.test <- filter(covariates, patient_id %in% joined_genos$patient_id)
 
 test_data = inner_join(inner_join(covariates, genotype),phenotypes)
 results=phewas(phenotypes=names(phenotypes)[-1], genotypes=c("TRPV1"), 
-               covariates=c("age", "ismale"), data=test_data, cores=4)
+               covariates=c("age", "gender"), data=test_data, cores=4)
 
-save(results, "~/Desktop/PhD/Research/QMUL/Research/Qatar Genomes Project/qatar-genomes/output/phewas.csv", 
-     compress=FALSE)
+## Saving results
+
+output_path <- "outputs/phewas_rollup_param.csv"
+
+if (!file.exists(output_path)) {
+  file.create(output_path)
+}
+
+write.csv(results, file = output_path)
