@@ -108,40 +108,42 @@ def calculate_unique_phenotypes(patient_icd10_dict):
     return len(unique_phenotypes)
 
 
-def make_phewas_table(qatari_data, patient_phenotypes, gene):
-    if os.path.exists(f'../data/phewas_tables/{gene}_phewas_table.xlsx'):
-        phewas_df = pd.read_excel(f'../data/phewas_tables/{gene}_phewas_table.xlsx', index_col=0)
+def make_phewas_table(qatari_data, patient_phenotypes, genes):
+    if os.path.exists(f'../data/phewas_tables/phewas_table.xlsx'):
+        phewas_df = pd.read_excel(f'../data/phewas_tables/phewas_table.xlsx', index_col=0)
         return phewas_df
     else:
-        phewas_df = qatari_data.loc[:, ['Dummy ID for GEL', 'age', 'gender', gene]]
-        phewas_df = phewas_df.rename(columns={'Dummy ID for GEL': 'patient_id'})
-        phewas_df[gene] = phewas_df[gene].fillna(0)
-        phewas_df[gene] = phewas_df[gene].replace('Hom', 1)
-        phewas_df[gene] = phewas_df[gene].replace('Het', 2)
+        phewas_df = qatari_data.rename(columns={'Dummy ID for GEL': 'patient_id'})
+        gene_data = phewas_df.copy()
+        gene_data.replace({np.nan: 0, 'Hom': 1, 'Het': 2}, inplace=True)
+        print(gene_data)
         unique_phenotypes = set()
+
         for key, values in patient_phenotypes.items():
             for value in values:
                 unique_phenotypes.add(value)
         unique_phenotypes = list(unique_phenotypes)
         patient_ids = phewas_df['patient_id'].tolist()
         phewas_array = phewas_df['patient_id'].to_numpy().reshape(-1, 1)
+        # TODO: Create genotypes table (patient_id, genotypes: 0, 1, 2 -> hom_wt, hom_mut, het (double check))
+        # TODO: Create phenodata table (patient_id, vocab, code, count)
 
-        for phenotype in tqdm(unique_phenotypes):
-            phenotype_column = []
-            for patient_id in patient_ids:
-                if phenotype in patient_phenotypes[patient_id]:
-                    phenotype_column.append(1)
-                else:
-                    phenotype_column.append(0)
-            phenotype_column = np.array(phenotype_column).reshape(-1, 1)
-            phewas_array = np.hstack((phewas_array, phenotype_column))
-
-        phen_df = pd.DataFrame(phewas_array)
-        phen_df = phen_df.drop(0, axis=1)
-        phen_df.columns = unique_phenotypes
-        phewas_df = pd.concat([phewas_df, phen_df], axis=1)
-        phewas_df.to_excel(f'../data/phewas_tables/{gene}_phewas_table.xlsx', index=False)
-        return phewas_df
+        # for phenotype in tqdm(unique_phenotypes):
+        #     phenotype_column = []
+        #     for patient_id in patient_ids:
+        #         if phenotype in patient_phenotypes[patient_id]:
+        #             phenotype_column.append(1)
+        #         else:
+        #             phenotype_column.append(0)
+        #     phenotype_column = np.array(phenotype_column).reshape(-1, 1)
+        #     phewas_array = np.hstack((phewas_array, phenotype_column))
+        #
+        # phen_df = pd.DataFrame(phewas_array)
+        # phen_df = phen_df.drop(0, axis=1)
+        # phen_df.columns = unique_phenotypes
+        # phewas_df = pd.concat([phewas_df, phen_df], axis=1)
+        # phewas_df.to_excel(f'../data/phewas_tables/{gene}_phewas_table.xlsx', index=False)
+        # return phewas_df
 
 
 def transform_phewas_table(patient_icd10):

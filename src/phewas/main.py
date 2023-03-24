@@ -9,7 +9,7 @@ from src.gwas.utils import splitted_patient_phenotypes, corpusify_phenotypes, to
 from dataloader import DataLoader
 
 
-def phenotype_preprocessing(wc=False):
+def phenotype_preprocessing(wc=False, test=False):
     """
     This function should create a dictionary such that each key is a patient ID and a value is a list of homogenized
     phenotypes. Homogenization entails that irregularities in the phenotype strings are removed, such as spaces,
@@ -28,6 +28,8 @@ def phenotype_preprocessing(wc=False):
     snomed_mapping = open_snomed_mapping(os.getenv("SNOMED_MAP"), icd10_mapping)
     patient_icd10, no_icd10_found = patient_icd10_map(patient_phenotypes, icd10_mapping, phecode_mapping,
                                                       snomed_mapping)
+    if test:
+        transform_phewas_table(patient_icd10)
     mappings = {**icd10_mapping, **phecode_mapping, **snomed_mapping}
     unique_phens_found = calculate_unique_phenotypes(patient_icd10)
     unique_phens_not_found = calculate_unique_phenotypes(no_icd10_found)
@@ -61,6 +63,8 @@ def phenotype_preprocessing(wc=False):
         phenotype_counts = dict(tokenized_corpus)
         create_wordcloud(phenotype_counts, title="Wordcloud of non-mapped phenotypes")
 
+    return qatari_data
+
 
 def phewas(patient_phenotypes, genes):
     """
@@ -77,10 +81,14 @@ def phewas(patient_phenotypes, genes):
 if __name__ == "__main__":
     load_dotenv()
     files = os.listdir('../data')
-    if 'full_icd10_map.pkl' not in files:
-        phenotype_preprocessing()
+    #if 'full_icd10_map.pkl' not in files:
+    qatari_data = phenotype_preprocessing()
+    genes = list(qatari_data.columns[4:])
     gene = "TRPV1"
     patient_phenotypes = pd.read_pickle('../data/full_icd10_map.pkl')
-    phewas(patient_phenotypes, gene)
+    phewas(patient_phenotypes, genes)
 
-    # TODO: Adjust make_phewas_table such that it contains all the genes in our datasat, not just one.
+    # TODO: Write mapping to csv and look up the phenotypes to be inspected manually. Then prepare a csv with only these
+    #  phenotypes and their ICD10 codes.
+
+    # TODO: Adjust make_phewas_table such that it contains all the genes in our dataset, not just one.
