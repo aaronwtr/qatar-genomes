@@ -74,7 +74,7 @@ def phewas(patient_phenotypes, genes):
     print("Loading data...")
     qatari_data = DataLoader(os.getenv("DATA")).get_qatari_data()
     print("Data loaded.")
-    print("Parsing patient phenotypes...")
+    print("Generating PheWAS table...")
     make_phewas_table(qatari_data, patient_phenotypes, genes)
 
 
