@@ -122,13 +122,14 @@ def make_phewas_table(qatari_data, patient_phenotypes, genes):
     phenotype_data = reshape_phendat
 
     count_col = np.full((phenotype_data.shape[0], 1), 5)
+    count_col[0] = 6
     phenotype_data = np.hstack((phenotype_data, count_col))
 
     phenotype_data = pd.DataFrame(phenotype_data)
     phenotype_data.columns = ['patient_id', 'vocabulary_id', 'code', 'count']
 
-    phenotype_data.to_csv('../data/phewas_tables/phenotype_data.csv')
-    gene_data.to_csv('../data/phewas_tables/gene_data.csv')
+    phenotype_data.to_csv('../data/phewas_tables/phenotype_data.csv', index=False)
+    gene_data.to_csv('../data/phewas_tables/gene_data.csv', index=False)
 
     # TODO: Cleanup and reformat code. This is only the PheWAS preprocessor, not the actual PheWAS.
 
