@@ -79,7 +79,9 @@ for (gene in gene_cols) {
   # cov_gen_data$gender <- as.factor(id.sex$gender)
   
   results <- phewas(phenotypes=names(phenotypes_nonan)[-1], genotypes=c(gene), 
-                    covariates=c("age", "gender"), data=cov_gen_data, cores=4)
+                    covariates=c("age", "gender"), data=cov_gen_data, cores=4, 
+                    significance.threshold = c("fdr"))
+  
   
   phe_results[[gene]] <- results
 }

@@ -84,7 +84,6 @@ if __name__ == "__main__":
     #if 'full_icd10_map.pkl' not in files:
     qatari_data = phenotype_preprocessing()
     genes = list(qatari_data.columns[4:])
-    gene = "TRPV1"
     patient_phenotypes = pd.read_pickle('../data/full_icd10_map.pkl')
     phewas(patient_phenotypes, genes)
 
