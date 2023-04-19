@@ -8,8 +8,8 @@ library(progress)
 
 setwd("~/Desktop/PhD/Research/QMUL/Research/Qatar Genomes Project/qatar-genomes")
 
-genodata <- fread("data/phewas_tables/gene_data.csv")
-phenodata <- fread("data/phewas_tables/phenotype_data.csv")
+genodata <- fread("data/phewas_input/gene_data.csv")
+phenodata <- fread("data/phewas_input/phenotype_data.csv")
 
 ## Processing phenotype data
 
@@ -33,16 +33,15 @@ phenotypes <- createPhenotypes(phenodata, min.code.count = 1,
                                vocabulary.map = PheWAS::phecode_map_icd10,
                                rollup.map=PheWAS::phecode_rollup_map)
 phenotypes_nonan<- phenotypes
-phenotypes_nonan[is.na(phenotypes_nonan)]<-FALSE
+phenotypes_nonan[is.na(phenotypes_nonan)] <- FALSE
+
+phecodes <- data.table(phecodes = names(phenotypes_nonan)[-1])
+phecodes <- addPhecodeInfo(phecodes)
+# write.csv(phecodes, file = "data/input_phecodes.csv")
 
 ## Processing auxiliary phewas data and genotype of interest
 
 gene_cols <- colnames(genodata)[5:ncol(genodata)]
-#genodata <- lapply(genodata,as.factor)
-#genodata$patient_id <- as.numeric(as.character(genodata$patient_id))
-#phenotypes$patient_id <- as.numeric(as.character(phenotypes$patient_id))
-#genodata$`ICD-10 phenotype` <- as.character(genodata$`ICD-10 phenotype`)
-#genodata$age <- as.numeric(genodata$age)
 genodata <- data.frame(genodata)
 
 
@@ -88,8 +87,4 @@ for (gene in gene_cols) {
 
 ## Saving results
 
-output_path <- "outputs/phewas_full_not_unique.csv"
-
-if (!file.exists(output_path)) {
-  write.csv(results, file = output_path)
-}
+saveRDS(phe_results, file = "outputs/phe_results_v1.rds")
