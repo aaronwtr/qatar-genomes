@@ -3,6 +3,7 @@ import pickle as pkl
 import pandas as pd
 import numpy as np
 import os
+import matplotlib.pyplot as plt
 
 
 def open_icd10_mapping(path_to_map):
@@ -108,7 +109,9 @@ def calculate_unique_phenotypes(patient_icd10_dict):
     return len(unique_phenotypes)
 
 
-def make_phewas_table(qatari_data, patient_phenotypes, genes):
+def make_phewas_table(qatari_data, patient_phenotypes):
+    # open data/phewas_input/BMI.xlsx
+    bmi_df = pd.read_excel('../data/phewas_input/BMI.xlsx')
     phewas_df = qatari_data.rename(columns={'Dummy ID for GEL': 'patient_id'})
     gene_data = phewas_df.copy()
     gene_data.replace({np.nan: 0, 'Hom': 1, 'Het': 2}, inplace=True)
@@ -130,8 +133,6 @@ def make_phewas_table(qatari_data, patient_phenotypes, genes):
 
     phenotype_data.to_csv('../data/phewas_tables/phenotype_data.csv', index=False)
     gene_data.to_csv('../data/phewas_tables/gene_data.csv', index=False)
-
-    # TODO: Cleanup and reformat code. This is only the PheWAS preprocessor, not the actual PheWAS.
 
     return gene_data, phenotype_data
 
@@ -166,3 +167,21 @@ def transform_phewas_table(patient_icd10):
     icd10_array = pd.DataFrame(icd10_array)
     icd10_array.columns = ['id', 'vocabulary_id', 'code', 'count']
     icd10_array.to_csv('../data/phewas_tables/TRPV1_icd10_test.csv', index=False)
+
+
+def count_pheno_groups(phenotypes):
+    phenos = list(phenotypes['group'])
+    pheno_count = {}
+    for pheno in phenos:
+        if pheno in pheno_count.keys():
+            pheno_count[pheno] += 1
+        else:
+            pheno_count[pheno] = 1
+    # plot the phenotype counts in a bar chart
+    sorted_pheno_count = {k: v for k, v in sorted(pheno_count.items(), key=lambda item: item[1], reverse=True)}
+    plt.figure(figsize=(10, 6))  # adjust the figure size
+    plt.bar(sorted_pheno_count.keys(), sorted_pheno_count.values())
+    plt.xticks(rotation=45, fontsize=8)  # rotate the labels and adjust font size
+    plt.tight_layout()  # adjust spacing
+    plt.show()
+    return pheno_count

@@ -66,7 +66,7 @@ def phenotype_preprocessing(wc=False, test=False):
     return qatari_data
 
 
-def phewas(patient_phenotypes, genes):
+def phewas_preprocessing(patient_phenotypes):
     """
     This function should create a dataframe that contains the covariates and phenotypes needed for a phewas analysis.
     This function also
@@ -75,19 +75,21 @@ def phewas(patient_phenotypes, genes):
     qatari_data = DataLoader(os.getenv("DATA")).get_qatari_data()
     print("Data loaded.")
     print("Generating PheWAS table...")
-    make_phewas_table(qatari_data, patient_phenotypes, genes)
+    make_phewas_table(qatari_data, patient_phenotypes)
+
+
+def analyse_input_phenos(input_phenos):
+    print("Counting PheWAS input phenotypes...")
+    pheno_counts = count_pheno_groups(input_phenos)
+
 
 
 if __name__ == "__main__":
     load_dotenv()
     files = os.listdir('../data')
     #if 'full_icd10_map.pkl' not in files:
-    qatari_data = phenotype_preprocessing()
-    genes = list(qatari_data.columns[4:])
-    patient_phenotypes = pd.read_pickle('../data/full_icd10_map.pkl')
-    phewas(patient_phenotypes, genes)
-
-    # TODO: Write mapping to csv and look up the phenotypes to be inspected manually. Then prepare a csv with only these
-    #  phenotypes and their ICD10 codes.
-
-    # TODO: Adjust make_phewas_table such that it contains all the genes in our dataset, not just one.
+    # qatari_data = phenotype_preprocessing()
+    # patient_phenotypes = pd.read_pickle('../data/full_icd10_map.pkl')
+    # phewas_preprocessing(patient_phenotypes)
+    input_phenos = pd.read_csv('../data/input_phecodes.csv')
+    analyse_input_phenos(input_phenos)
