@@ -121,6 +121,9 @@ def make_phewas_table(qatari_data, patient_phenotypes):
     gene_data_right = gene_data.iloc[:, [0] + list(range(4, len(gene_data.columns)))]
     merged_df = pd.merge(gene_data_left, bmi_df, on='patient_id', how='left')
     gene_data = pd.merge(merged_df, gene_data_right, on='patient_id', how='left')
+    duplicates = gene_data.duplicated(subset=['patient_id'])
+    duplicates = duplicates.index[duplicates == True].tolist()
+    gene_data = gene_data.drop(duplicates)
 
     phenotype_data = np.array([[key, value] for key in patient_phenotypes for value in patient_phenotypes[key]])
     code_col = np.full((phenotype_data.shape[0], 1), 'ICD10')
