@@ -113,6 +113,7 @@ def make_phewas_table(qatari_data, patient_phenotypes):
     bmi_df = pd.read_excel('../data/phewas_input/BMI.xlsx')
     bmi_df = bmi_df.rename(columns={'Dummy ID for GEL': 'patient_id'})
     bmi_df = bmi_df[['patient_id', 'BodyFat - BMI']]
+    bmi_df = bmi_df.rename(columns={'BodyFat - BMI': 'BMI'})
     phewas_df = qatari_data.rename(columns={'Dummy ID for GEL': 'patient_id'})
     gene_data = phewas_df.copy()
     gene_data.replace({np.nan: 0, 'Hom': 1, 'Het': 2}, inplace=True)
