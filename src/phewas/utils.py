@@ -136,8 +136,8 @@ def make_phewas_table(qatari_data, patient_phenotypes):
     phenotype_data = pd.DataFrame(phenotype_data)
     phenotype_data.columns = ['patient_id', 'vocabulary_id', 'code', 'count']
 
-    phenotype_data.to_csv('../data/phewas_tables/phenotype_data.csv', index=False)
-    gene_data.to_csv('../data/phewas_tables/gene_data_bmi.csv', index=False)
+    phenotype_data.to_csv('../data/phewas_input/phenotype_data.csv', index=False)
+    gene_data.to_csv('../data/phewas_input/gene_data_bmi.csv', index=False)
 
     return gene_data, phenotype_data
 
