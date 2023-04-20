@@ -88,8 +88,8 @@ if __name__ == "__main__":
     load_dotenv()
     files = os.listdir('../data')
     #if 'full_icd10_map.pkl' not in files:
-    # qatari_data = phenotype_preprocessing()
-    # patient_phenotypes = pd.read_pickle('../data/full_icd10_map.pkl')
-    # phewas_preprocessing(patient_phenotypes)
-    input_phenos = pd.read_csv('../data/input_phecodes.csv')
-    analyse_input_phenos(input_phenos)
+    qatari_data = phenotype_preprocessing()
+    patient_phenotypes = pd.read_pickle('../data/full_icd10_map.pkl')
+    phewas_preprocessing(patient_phenotypes)
+    # input_phenos = pd.read_csv('../data/input_phecodes.csv')
+    # analyse_input_phenos(input_phenos)

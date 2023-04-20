@@ -110,14 +110,19 @@ def calculate_unique_phenotypes(patient_icd10_dict):
 
 
 def make_phewas_table(qatari_data, patient_phenotypes):
-    # open data/phewas_input/BMI.xlsx
     bmi_df = pd.read_excel('../data/phewas_input/BMI.xlsx')
+    bmi_df = bmi_df.rename(columns={'Dummy ID for GEL': 'patient_id'})
+    bmi_df = bmi_df[['patient_id', 'BodyFat - BMI']]
     phewas_df = qatari_data.rename(columns={'Dummy ID for GEL': 'patient_id'})
     gene_data = phewas_df.copy()
     gene_data.replace({np.nan: 0, 'Hom': 1, 'Het': 2}, inplace=True)
+    gene_data_left = gene_data[['patient_id', 'ICD-10 phenotype', 'gender', 'age']]
+    gene_data_right = gene_data.iloc[:, [0] + list(range(4, len(gene_data.columns)))]
+    merged_df = pd.merge(gene_data_left, bmi_df, on='patient_id', how='left')
+    gene_data = pd.merge(merged_df, gene_data_right, on='patient_id', how='left')
+
     phenotype_data = np.array([[key, value] for key in patient_phenotypes for value in patient_phenotypes[key]])
     code_col = np.full((phenotype_data.shape[0], 1), 'ICD10')
-
     reshape_phendat = np.empty((phenotype_data.shape[0], phenotype_data.shape[1] + 1), dtype=phenotype_data.dtype)
     reshape_phendat[:, 0] = phenotype_data[:, 0]
     reshape_phendat[:, 1] = code_col[:, 0]
@@ -132,7 +137,7 @@ def make_phewas_table(qatari_data, patient_phenotypes):
     phenotype_data.columns = ['patient_id', 'vocabulary_id', 'code', 'count']
 
     phenotype_data.to_csv('../data/phewas_tables/phenotype_data.csv', index=False)
-    gene_data.to_csv('../data/phewas_tables/gene_data.csv', index=False)
+    gene_data.to_csv('../data/phewas_tables/gene_data_bmi.csv', index=False)
 
     return gene_data, phenotype_data
 
@@ -177,11 +182,10 @@ def count_pheno_groups(phenotypes):
             pheno_count[pheno] += 1
         else:
             pheno_count[pheno] = 1
-    # plot the phenotype counts in a bar chart
     sorted_pheno_count = {k: v for k, v in sorted(pheno_count.items(), key=lambda item: item[1], reverse=True)}
-    plt.figure(figsize=(10, 6))  # adjust the figure size
+    plt.figure(figsize=(10, 6))
     plt.bar(sorted_pheno_count.keys(), sorted_pheno_count.values())
-    plt.xticks(rotation=45, fontsize=8)  # rotate the labels and adjust font size
-    plt.tight_layout()  # adjust spacing
+    plt.xticks(rotation=45, fontsize=8)
+    plt.tight_layout()
     plt.show()
     return pheno_count
