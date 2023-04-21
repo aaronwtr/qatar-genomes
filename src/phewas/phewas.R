@@ -19,6 +19,7 @@ id.sex$gender[which(id.sex$gender=="FEMALE")]<-"F"
 
 genodata$patient_id <- as.character(genodata$patient_id)
 genodata$gender <- as.factor(genodata$gender)
+genodata$BMI <- as.numeric(genodata$BMI)
 id.sex$patient_id <- as.character(id.sex$patient_id)
 id.sex$gender <- as.factor(id.sex$gender)
 
