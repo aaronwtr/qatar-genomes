@@ -69,9 +69,6 @@ for (gene in gene_cols) {
   colnames(cov_gen_data)[4] <- "BMI"
   cov_gen_data$patient_id <- as.character(cov_gen_data$patient_id)
   
-  
-  # cov_gen_data$gender <- as.factor(id.sex$gender)
-  
   results <- phewas(phenotypes=names(phenotypes_nonan)[-1], genotypes=c(gene), 
                     covariates=c("age", "gender", "BMI"), data=cov_gen_data, 
                     cores=4, significance.threshold = c("fdr"))
