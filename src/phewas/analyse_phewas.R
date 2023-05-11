@@ -19,16 +19,19 @@ combined_phewas <- addPhecodeInfo(combined_phewas, groupnums=T)
 
 ## Generating list of results, lowest association for each variant
 
-phewas_sing_snp <- combined_phewas %>%
+filtered_datatable <- combined_phewas %>%
   group_by(snp) %>%
-  summarize(p = min(p), description = first(description), 
-            phenotype = first(phenotype)) %>%
+  filter(p == min(p)) %>%
   ungroup()
 
-write_xlsx(phewas_sing_snp, 
+top_hits_per_variant <- filtered_datatable %>%
+  select(snp, p, allele_freq, description, phenotype)
+
+
+write_xlsx(top_hits_per_variant, 
            "outputs/full_results/phewas_summary_age_gender_adjusted.xlsx")
 
-## Plotting ouput phecode group distribution
+## Plotting output phecode group distribution
 
 group_counts <- count(combined_phewas, group)
 group_counts <- group_counts[order(-group_counts$n), ]
